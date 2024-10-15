@@ -1,31 +1,41 @@
 extends CharacterBody2D
 
-@export var speed = 100.0
-@export var gravity = 200
-@export var jump_height = -150
+@export var speed = 175.0
+@export var gravity = 300
+@export var jump_height = -145
 
 var is_dashing = false
 var is_climbing = false
+var is_jumping = false
 
 var current_anim
 
 
 func horizontal_movement():
 	var hor_inp = Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left")
-	velocity.x = hor_inp * speed
+	self.velocity.x = hor_inp * speed
 
 
 func _physics_process(delta: float) -> void:
 	# calculate movement
-	velocity.y += gravity * delta
+	self.velocity.y += gravity * delta
 	horizontal_movement()
 	
 	# apply movement
-	move_and_slide()
+	self.move_and_slide()
 
 	# display animations
 	if !is_climbing:
 		player_animations()
+		
+	while is_jumping:
+		var jump_strength = Input.get_action_strength("ui_jump")
+		print(jump_strength)
+		var jump_vel = jump_height * jump_strength
+		self.velocity.y = jump_vel
+	
+	if self.is_on_floor():
+		is_jumping = false
 	
 
 func player_animations():
@@ -47,8 +57,9 @@ func player_animations():
 
 
 func _input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_jump") and is_on_floor():
-		velocity.y = jump_height
+	if event.is_action_pressed("ui_jump") and self.is_on_floor():
+		self.velocity.y = jump_height
+		is_jumping = true
 		current_anim = "jump"
 		$AnimatedSprite2D.play("jump")
 
@@ -58,7 +69,7 @@ func _input(event: InputEvent) -> void:
 
 	if event.is_action_pressed("ui_climb"):
 		is_climbing = true
-		velocity.y = -200
+		self.velocity.y = -200
 		print("Climbing - handle movement later")
 
 
